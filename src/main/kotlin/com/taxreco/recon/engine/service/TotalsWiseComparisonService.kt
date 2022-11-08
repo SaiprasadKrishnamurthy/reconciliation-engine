@@ -1,10 +1,10 @@
-package com.taxreco.recon.engine.service.eval
+package com.taxreco.recon.engine.service
 
 import com.taxreco.recon.engine.model.MatchRuleSet
 import com.taxreco.recon.engine.model.ReconciliationContext
 import com.taxreco.recon.engine.model.RulesetEvaluationService
 import com.taxreco.recon.engine.model.RulesetType
-import com.taxreco.recon.engine.service.eval.Functions.MATCH_KEY_ATTRIBUTE
+import com.taxreco.recon.engine.service.Functions.MATCH_KEY_ATTRIBUTE
 import org.springframework.context.expression.MapAccessor
 import org.springframework.expression.ExpressionParser
 import org.springframework.expression.spel.standard.SpelExpressionParser
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
-class EntryWiseOneToManyComparisonService : RulesetEvaluationService {
+class TotalsWiseComparisonService : RulesetEvaluationService {
 
     override fun match(
         reconciliationContext: ReconciliationContext,
@@ -57,7 +57,7 @@ class EntryWiseOneToManyComparisonService : RulesetEvaluationService {
     }
 
     override fun supportedRulesetType(): RulesetType {
-        return RulesetType.EntryWiseOneToManyComparison
+        return RulesetType.TotalsComparison
     }
 
     private fun standardEvaluationContext(
@@ -69,9 +69,9 @@ class EntryWiseOneToManyComparisonService : RulesetEvaluationService {
         val simpleContext = StandardEvaluationContext(mapOf(keyA to attsA, keyB to attsB))
         simpleContext.addPropertyAccessor(MapAccessor())
         simpleContext.registerFunction(
-            "multimatch",
+            "totalEqualsWithNumericTolerance",
             Functions::class.java.getDeclaredMethod(
-                "multimatch",
+                "totalEqualsWithNumericTolerance",
                 String::class.java,
                 List::class.java,
                 List::class.java,

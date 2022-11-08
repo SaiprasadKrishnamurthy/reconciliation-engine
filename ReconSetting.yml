@@ -1,22 +1,18 @@
----
 id: '1'
 name: Transaction Matches
 dataSources:
   - id: sales
     predicate: date(transactionDate,'YYYY-MM-DD') >= '2021-04-01' and date(transactionDate,'YYYY-MM-DD')
       < '2022-04-01' order by transactionDate
-    bucketFields:
-      - entityId
+    bucketField: entityId
   - id: tdsLedger
     predicate: date(transactionDate,'YYYY-MM-DD') >= '2021-04-01' and date(transactionDate,'YYYY-MM-DD')
       < '2022-04-01' order by transactionDate
-    bucketFields:
-      - entityId
+    bucketField: entityId
   - id: 26as
     predicate: date(transactionDate,'YYYY-MM-DD') >= '2021-04-01' and date(transactionDate,'YYYY-MM-DD')
       < '2022-04-01' order by transactionDate
-    bucketFields:
-      - entityId
+    bucketField: entityId
 rulesets:
   - name: Field Checks
     type: FieldChecks
@@ -40,8 +36,6 @@ rulesets:
           - TRANSACTION_TOTALS_UNMATCHED_BETWEEN_SALES_AND_TDSLEDGER
   - name: Transaction Level Matches
     type: EntryWiseOneToOneComparison
-    terminateWhenTagsPresent:
-      - TRANSACTION_TOTALS_MATCHED_BETWEEN_SALES_AND_TDSLEDGER
     rules:
       - id: tds_at_transactions_level_between_sales_and_tds_ledger
         expression: "#valueWithinTolerance(sales.tdsOnSales, tdsLedger.tds, 1.0) && sales.invoiceNo

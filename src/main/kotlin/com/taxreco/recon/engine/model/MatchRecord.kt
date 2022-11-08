@@ -12,8 +12,9 @@ data class MatchRecord(
     val originalRecordId: String,
     val jobId: String,
     var matchTags: MutableSet<String> = mutableSetOf(),
-    val buckets: MutableMap<String, String> = LinkedHashMap(),
+    val bucketKey: String,
+    val bucketValue: String,
     val matchKey: String,
-    val records: List<Map<String, Any>>,
+    val record: Map<String, Any>,
     val datasource: String
 )

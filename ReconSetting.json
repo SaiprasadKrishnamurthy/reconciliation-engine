@@ -4,24 +4,13 @@
   "dataSources": [
     {
       "id": "sales",
-      "predicate": "date(transactionDate,'YYYY-MM-DD') >= '2021-04-01' and date(transactionDate,'YYYY-MM-DD') < '2022-04-01' order by transactionDate",
-      "bucketFields": [
-        "entityId"
-      ]
+      "predicate": "name='sales' order by id",
+      "bucketField": "entityId"
     },
     {
       "id": "tdsLedger",
-      "predicate": "date(transactionDate,'YYYY-MM-DD') >= '2021-04-01' and date(transactionDate,'YYYY-MM-DD') < '2022-04-01' order by transactionDate",
-      "bucketFields": [
-        "entityId"
-      ]
-    },
-    {
-      "id": "26as",
-      "predicate": "date(transactionDate,'YYYY-MM-DD') >= '2021-04-01' and date(transactionDate,'YYYY-MM-DD') < '2022-04-01' order by transactionDate",
-      "bucketFields": [
-        "entityId"
-      ]
+      "predicate": "name='tdsLedger' order by id",
+      "bucketField": "entityId"
     }
   ],
   "rulesets": [

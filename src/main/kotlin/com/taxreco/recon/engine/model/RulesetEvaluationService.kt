@@ -1,6 +1,6 @@
 package com.taxreco.recon.engine.model
 
-import com.taxreco.recon.engine.service.eval.Functions.MATCH_KEY_ATTRIBUTE
+import com.taxreco.recon.engine.service.Functions.MATCH_KEY_ATTRIBUTE
 
 interface RulesetEvaluationService {
     fun match(reconciliationContext: ReconciliationContext, ruleSet: MatchRuleSet)

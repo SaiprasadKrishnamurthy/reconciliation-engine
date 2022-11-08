@@ -1,12 +1,12 @@
 package com.taxreco.recon.engine.config
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.github.vincentrussell.query.mongodb.sql.converter.QueryConverter
 import com.taxreco.recon.engine.model.ReconciliationContext
 import com.taxreco.recon.engine.model.ReconciliationSetting
+import com.taxreco.recon.engine.model.RecordId
 import com.taxreco.recon.engine.model.TransactionRecord
-import com.taxreco.recon.engine.service.eval.ReconciliationService
-import org.bson.Document
+import com.taxreco.recon.engine.repository.MatchRecordRepository
+import com.taxreco.recon.engine.service.ReconciliationService
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -21,43 +21,70 @@ class Bootstrap {
     fun start(
         mongoTemplate: MongoTemplate,
         tenantContext: TenantContext,
-        reconciliationService: ReconciliationService
+        reconciliationService: ReconciliationService,
+        matchRecordRepository: MatchRecordRepository
     ) = CommandLineRunner {
-//        mongoSample(mongoTemplate)
-
-        foo(reconciliationService)
+        tenantContext.tenantId = "omlogistics"
+        mongoSample(tenantContext, mongoTemplate)
+        foo(reconciliationService, matchRecordRepository)
     }
 
-    private fun mongoSample(mongoTemplate: MongoTemplate) {
-        val transactionRecord = TransactionRecord(
-            id = "1",
-            name = "one",
-            hashMapOf("ProfessionalServices" to 1000.0, "TdsOnSales" to 100.0, "InvoiceNumber" to "INV1")
+    private fun mongoSample(tenantContext: TenantContext, mongoTemplate: MongoTemplate) {
+        mongoTemplate.dropCollection(TransactionRecord::class.java)
+        val sales = listOf(
+            TransactionRecord(
+                id = RecordId("1", "sales"),
+                name = "sales",
+                attrs = mutableMapOf("transactionAmount" to 1000.0, "tdsOnSales" to 100.0, "invoiceNo" to "1")
+            ),
+            TransactionRecord(
+                id = RecordId("2", "sales"),
+                name = "sales",
+                attrs = mutableMapOf("transactionAmount" to 1100.0, "tdsOnSales" to 111.0, "invoiceNo" to "2")
+            ),
+            TransactionRecord(
+                id = RecordId("3", "sales"),
+                name = "sales",
+                attrs = mutableMapOf("transactionAmount" to 11100.0, "tdsOnSales" to 1118.0, "invoiceNo" to "3")
+            )
         )
-        mongoTemplate.save(transactionRecord)
 
-        val all = mongoTemplate.findAll(TransactionRecord::class.java)
+        val tdsLedger = listOf(
+            TransactionRecord(
+                id = RecordId("1", "tdsLedger"),
+                name = "tdsLedger",
+                attrs = mutableMapOf("tds" to 50.0, "invoiceNo" to "1")
+            ),
+            TransactionRecord(
+                id = RecordId("2", "tdsLedger"),
+                name = "tdsLedger",
+                attrs = mutableMapOf("tds" to 50.0, "invoiceNo" to "1")
+            ),
+            TransactionRecord(
+                id = RecordId("3", "tdsLedger"),
+                name = "tdsLedger",
+                attrs = mutableMapOf("tds" to 110.0, "invoiceNo" to "2")
+            ),
+            TransactionRecord(
+                id = RecordId("4", "tdsLedger"),
+                name = "tdsLedger",
+                attrs = mutableMapOf("tds" to 110.0, "invoiceNo" to "3")
+            )
+        )
 
-        val queryConverter = QueryConverter.Builder()
-            .sqlString("select * from transactionRecord where attrs.ProfessionalServices > 500")
-            .build()
-
-        val mongoDBQueryHolder = queryConverter.mongoQuery
-        val collection = mongoTemplate.getCollection(mongoDBQueryHolder.collection)
-        collection.find(mongoDBQueryHolder.query)
-            .projection(mongoDBQueryHolder.projection)
-            .map { a: Document -> a }
-            .forEach { println(it.toJson()) }
+        sales.forEach { mongoTemplate.save(it) }
+        tdsLedger.forEach { mongoTemplate.save(it) }
     }
 
-    private fun foo(reconciliationService: ReconciliationService) {
+    private fun foo(reconciliationService: ReconciliationService, matchRecordRepository: MatchRecordRepository) {
         val reconciliationSetting =
             jacksonObjectMapper().readValue(FileInputStream("ReconSetting.json"), ReconciliationSetting::class.java)
         val rc =
             ReconciliationContext(
                 reconciliationSetting = reconciliationSetting,
                 jobId = UUID.randomUUID().toString(),
-                tenantId = "local"
+                tenantId = "local",
+                bucketValue = "Entity1"
             )
         reconciliationService.reconcile(rc)
     }

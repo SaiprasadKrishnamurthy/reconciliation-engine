@@ -59,6 +59,12 @@
             <artifactId>mongodb</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>io.nats</groupId>
+            <artifactId>jnats</artifactId>
+            <version>2.16.3</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
@@ -118,6 +124,11 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
+        </repository>
+        <repository>
+            <id>maven-central</id>
+            <name>maven-central</name>
+            <url>http://repo1.maven.org/maven2</url>
         </repository>
     </repositories>
     <pluginRepositories>

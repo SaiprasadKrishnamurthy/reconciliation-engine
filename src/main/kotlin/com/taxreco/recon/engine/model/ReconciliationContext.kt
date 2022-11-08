@@ -3,6 +3,7 @@ package com.taxreco.recon.engine.model
 data class ReconciliationContext(val jobId: String,
                                  val tenantId: String,
                                  val startedAt: Long = System.currentTimeMillis(),
+                                 val bucketValue: String,
                                  val reconciliationSetting: ReconciliationSetting) {
     val transactionRecords: MutableMap<String, List<TransactionRecord>> = mutableMapOf()
 
