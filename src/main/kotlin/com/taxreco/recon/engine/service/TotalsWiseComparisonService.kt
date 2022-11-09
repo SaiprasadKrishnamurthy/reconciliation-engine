@@ -22,7 +22,7 @@ class TotalsWiseComparisonService : RulesetEvaluationService {
         if (supportedRulesetType() == ruleSet.type) {
             val parser: ExpressionParser = SpelExpressionParser()
             ruleSet.rules.forEach { rule ->
-                val tokens = rule.expression!!.split("[\\p{Punct}\\s]+".toRegex())
+                val tokens = rule.expression!!.split("[\\p{Punct}\\s&&[^_]]+".toRegex())
                 val datasources = tokens
                     .filter { reconciliationContext.reconciliationSetting.dataSources.map { d -> d.id }.contains(it) }
                     .distinct()

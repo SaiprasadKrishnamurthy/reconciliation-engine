@@ -11,13 +11,11 @@ interface RulesetEvaluationService {
             .flatten()
             .forEach { r ->
                 if (!r.attrs.containsKey(MATCH_KEY_ATTRIBUTE) ||
-                    r.attrs[MATCH_KEY_ATTRIBUTE]?.toString()?.startsWith("$") == true
+                    r.attrs[MATCH_KEY_ATTRIBUTE]?.toString()?.contains("$") == true
                 ) {
                     r.matchTags.addAll(rule.tagsWhenNotMatched)
                 } else {
-                    if (r.attrs[MATCH_KEY_ATTRIBUTE].toString().startsWith(rule.id)) {
-                        r.matchTags.addAll(rule.tagsWhenMatched)
-                    }
+                    r.matchTags.addAll(rule.tagsWhenMatched)
                 }
             }
     }

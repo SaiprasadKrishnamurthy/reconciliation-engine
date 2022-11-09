@@ -1,0 +1,48 @@
+{
+  "id": "1",
+  "name": "Transaction Matches",
+  "group": "FY 21-22",
+  "dataSources": [
+    {
+      "id": "sales",
+      "predicate": "name='sales' order by id",
+      "bucketField": "entityId"
+    },
+    {
+      "id": "tdsLedger",
+      "predicate": "name='tdsLedger' order by id",
+      "bucketField": "entityId"
+    },
+    {
+      "id": "_26as",
+      "predicate": "name='_26as' order by id",
+      "bucketField": "entityId"
+    }
+  ],
+  "ruleset": {
+    "name": "Field Checks",
+    "type": "FieldChecks",
+    "rules": [
+      {
+        "id": "tds_value_checks_on_sales",
+        "expression": "#valueWithinTolerance(sales.tdsOnSales, 0.1 * sales.transactionAmount, 1.0)",
+        "tagsWhenMatched": [
+          "CORRECT_TDS_ON_SALES"
+        ],
+        "tagsWhenNotMatched": [
+          "INCORRECT_TDS_ON_SALES"
+        ]
+      },
+      {
+        "id": "tds_value_checks_on_tds_ledger",
+        "expression": "tdsLedger.tds > 0",
+        "tagsWhenMatched": [
+          "CORRECT_TDS_ON_TDS_LEDGER"
+        ],
+        "tagsWhenNotMatched": [
+          "INCORRECT_TDS_ON_TDS_LEDGER"
+        ]
+      }
+    ]
+  }
+}

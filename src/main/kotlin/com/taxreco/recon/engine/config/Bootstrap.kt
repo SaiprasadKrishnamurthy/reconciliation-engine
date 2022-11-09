@@ -68,17 +68,31 @@ class Bootstrap {
             TransactionRecord(
                 id = RecordId("4", "tdsLedger"),
                 name = "tdsLedger",
-                attrs = mutableMapOf("tds" to 110.0, "invoiceNo" to "3")
+                attrs = mutableMapOf("tds" to 320.0, "invoiceNo" to "3")
+            )
+        )
+
+        val t6as = listOf(
+            TransactionRecord(
+                id = RecordId("1", "_26as"),
+                name = "_26as",
+                attrs = mutableMapOf("amountPaid" to 1100.0, "taxFiled" to 110.0, "invoiceNo" to "2")
+            ),
+            TransactionRecord(
+                id = RecordId("2", "_26as"),
+                name = "_26as",
+                attrs = mutableMapOf("amountPaid" to 1600.0, "taxFiled" to 160.0)
             )
         )
 
         sales.forEach { mongoTemplate.save(it) }
         tdsLedger.forEach { mongoTemplate.save(it) }
+        t6as.forEach { mongoTemplate.save(it) }
     }
 
     private fun foo(reconciliationService: ReconciliationService, matchRecordRepository: MatchRecordRepository) {
         val reconciliationSetting =
-            jacksonObjectMapper().readValue(FileInputStream("ReconSetting.json"), ReconciliationSetting::class.java)
+            jacksonObjectMapper().readValue(FileInputStream("ReconSettingTransactionChecks.json"), ReconciliationSetting::class.java)
         val rc =
             ReconciliationContext(
                 reconciliationSetting = reconciliationSetting,

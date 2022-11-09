@@ -71,19 +71,21 @@ object Functions {
                 val sumA = recA.value.mapNotNull { it[fieldA]?.toString()?.toDoubleOrNull() }.sum()
                 val sumB = groupB[recA.key]?.mapNotNull { it[fieldB]?.toString()?.toDoubleOrNull() }?.sum()
                 if (sumB != null && abs(sumA - sumB) <= tolerance) {
-                    val matchKey = name + "__" + MatchKeyContext.keyFor(name)
+                    val matchKey =MatchKeyContext.keyFor(name)
                     recA.value.forEach { ra ->
                         if (!ra.containsKey(MATCH_KEY_ATTRIBUTE) || ra[MATCH_KEY_ATTRIBUTE].toString()
-                                .startsWith("$")
+                                .contains("$")
                         ) {
                             ra[MATCH_KEY_ATTRIBUTE] = matchKey
                         }
                     }
                     groupB[recA.key]?.forEach { rb ->
                         if (!rb.containsKey(MATCH_KEY_ATTRIBUTE) || rb[MATCH_KEY_ATTRIBUTE].toString()
-                                .startsWith("$")
+                                .contains("$")
                         ) {
-                            rb[MATCH_KEY_ATTRIBUTE] = matchKey
+                            val correlatedMatchKey =
+                                if (recA.value.isNotEmpty()) recA.value[0][MATCH_KEY_ATTRIBUTE].toString() else matchKey
+                            rb[MATCH_KEY_ATTRIBUTE] = correlatedMatchKey
                         }
                     }
                 }

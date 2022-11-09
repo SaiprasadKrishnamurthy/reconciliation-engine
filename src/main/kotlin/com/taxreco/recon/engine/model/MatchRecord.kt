@@ -10,8 +10,10 @@ data class MatchRecord(
     @Id
     val id: String,
     val originalRecordId: String,
+    val groupName: String,
     val jobId: String,
-    var matchTags: MutableSet<String> = mutableSetOf(),
+    val rulesetType: RulesetType,
+    var tags: MutableSet<String> = mutableSetOf(),
     val bucketKey: String,
     val bucketValue: String,
     val matchKey: String,

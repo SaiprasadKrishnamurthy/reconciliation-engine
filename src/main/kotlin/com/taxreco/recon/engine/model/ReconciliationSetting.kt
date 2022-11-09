@@ -4,5 +4,6 @@ data class ReconciliationSetting(
     val dataSources: List<DataSource>,
     val id: String,
     val name: String,
-    val rulesets: List<MatchRuleSet>
+    val group: String,
+    val ruleset: MatchRuleSet
 )

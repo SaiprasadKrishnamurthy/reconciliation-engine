@@ -1,5 +1,6 @@
 package com.taxreco.recon.engine.repository
 
+import com.taxreco.recon.engine.model.DataSet
 import com.taxreco.recon.engine.model.MatchRecord
 import com.taxreco.recon.engine.model.MatchResult
 import com.taxreco.recon.engine.service.Functions
@@ -34,13 +35,14 @@ class MatchRecordRepository(private val mongoTemplate: MongoTemplate) {
         val records = mongoTemplate.find(query, MatchRecord::class.java)
         val matches = records.groupBy { it.datasource }
             .mapValues { it.value.map { v -> v.record.filter { a -> a.key != Functions.MATCH_KEY_ATTRIBUTE } } }
-        val matchTags = records.flatMap { it.matchTags }.distinct()
+        val matchTags = records.flatMap { it.tags }.distinct()
         return MatchResult(
             jobId = jobId,
             matchKey = matchKey,
-            matches = matches,
-            matchTags = matchTags,
-            bucketValue = bucketValue
+            groupName = if (records.isNotEmpty()) records[0].groupName else "",
+            dataset = DataSet(matches, matchTags),
+            bucketValue = bucketValue,
+            rulesetType = if (records.isNotEmpty()) records[0].rulesetType else null,
         )
     }
 }

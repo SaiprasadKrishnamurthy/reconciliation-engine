@@ -16,9 +16,10 @@ class NatsPublisher(private val connection: Connection) : MatchResultPublisher {
 
     override fun publish(reconciliationContext: ReconciliationContext, matchResult: MatchResult) {
         val topic = reconciliationContext.tenantId + ".reconresult." + reconciliationContext.jobId
+        val json = jacksonObjectMapper.writeValueAsString(matchResult)
         connection.jetStream().publish(
             topic,
-            jacksonObjectMapper.writeValueAsString(matchResult).toByteArray(Charset.defaultCharset())
+            json.toByteArray(Charset.defaultCharset())
         )
     }
 

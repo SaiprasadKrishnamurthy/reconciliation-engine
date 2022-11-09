@@ -31,33 +31,32 @@ class ReconciliationService(
         }
 
         val servs = applicationContext.getBeansOfType(RulesetEvaluationService::class.java).values
-        reconciliationContext.reconciliationSetting.rulesets.forEach { rs ->
-            servs.filter { it.supportedRulesetType() == rs.type }
-                .forEach {
-                    it.match(reconciliationContext, rs)
-                }
-        }
-
-        cleanupMatchKeys(reconciliationContext)
+        servs.filter { it.supportedRulesetType() == reconciliationContext.reconciliationSetting.ruleset.type }
+            .forEach {
+                it.match(reconciliationContext, reconciliationContext.reconciliationSetting.ruleset)
+            }
 
         println("\n\n-----------\n\n")
-        reconciliationContext.transactionRecords.forEach { kv ->
-            kv.value.forEach { tr ->
-                mongoTemplate.save(
-                    MatchRecord(
-                        id = tr.id!!.idField + "_" + tr.id!!.name,
-                        originalRecordId = tr.id!!.idField,
-                        jobId = reconciliationContext.jobId,
-                        bucketKey = reconciliationContext.reconciliationSetting.dataSources.first { it.id == tr.name }.bucketField,
-                        bucketValue = reconciliationContext.bucketValue,
-                        matchKey = tr.attrs[MATCH_KEY_ATTRIBUTE]?.toString() ?: "",
-                        record = tr.attrs,
-                        matchTags = tr.matchTags,
-                        datasource = tr.name
+        reconciliationContext.transactionRecords
+            .forEach { kv ->
+                kv.value.filter { it.matchTags.isNotEmpty() }.forEach { tr ->
+                    mongoTemplate.save(
+                        MatchRecord(
+                            id = tr.id!!.idField + "_" + tr.id!!.name,
+                            originalRecordId = tr.id!!.idField,
+                            groupName = reconciliationContext.reconciliationSetting.group,
+                            jobId = reconciliationContext.jobId,
+                            bucketKey = reconciliationContext.reconciliationSetting.dataSources.first { it.id == tr.name }.bucketField,
+                            bucketValue = reconciliationContext.bucketValue,
+                            matchKey = tr.attrs[MATCH_KEY_ATTRIBUTE]?.toString() ?: "",
+                            record = tr.attrs,
+                            tags = tr.matchTags,
+                            datasource = tr.name,
+                            rulesetType = reconciliationContext.reconciliationSetting.ruleset.type
+                        )
                     )
-                )
+                }
             }
-        }
 
         if (streamResults) {
             matchResultPublisher.init(reconciliationContext)
@@ -73,18 +72,5 @@ class ReconciliationService(
             }
         }
 
-    }
-
-    private fun cleanupMatchKeys(reconciliationContext: ReconciliationContext) {
-        reconciliationContext.transactionRecords.forEach { e ->
-            e.value.forEach { r ->
-                if (r.attrs.containsKey(MATCH_KEY_ATTRIBUTE) && r.attrs[MATCH_KEY_ATTRIBUTE].toString()
-                        .contains("__")
-                ) {
-                    r.attrs[MATCH_KEY_ATTRIBUTE] =
-                        r.attrs[MATCH_KEY_ATTRIBUTE].toString().substringAfter("__").replace("__", "")
-                }
-            }
-        }
     }
 }
