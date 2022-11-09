@@ -40,7 +40,7 @@ object Functions {
                                 .mapNotNull { it[manyFieldB]?.toString()?.toDoubleOrNull() }
                             val result = findElements(arr, valueA, tolerance)
                             if (result.isNotEmpty()) {
-                                val key = name + "__" + MatchKeyContext.keyFor(name)
+                                val key = MatchKeyContext.keyFor(name)
                                 one[MATCH_KEY_ATTRIBUTE] = key
                                 result.map { gb[it][MATCH_KEY_ATTRIBUTE] = key }
                             }

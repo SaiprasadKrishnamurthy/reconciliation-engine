@@ -91,15 +91,25 @@ class Bootstrap {
     }
 
     private fun foo(reconciliationService: ReconciliationService, matchRecordRepository: MatchRecordRepository) {
-        val reconciliationSetting =
-            jacksonObjectMapper().readValue(FileInputStream("ReconSettingTransactionChecks.json"), ReconciliationSetting::class.java)
-        val rc =
-            ReconciliationContext(
-                reconciliationSetting = reconciliationSetting,
-                jobId = UUID.randomUUID().toString(),
-                tenantId = "local",
-                bucketValue = "Entity1"
-            )
-        reconciliationService.reconcile(rc)
+        val files = arrayOf(
+            "ReconSettingFieldChecks.json",
+            "ReconSettingTotalsChecks.json",
+            "ReconSettingTransactionChecks.json"
+        )
+        files.forEach { f ->
+            val reconciliationSetting =
+                jacksonObjectMapper().readValue(
+                    FileInputStream(f),
+                    ReconciliationSetting::class.java
+                )
+            val rc =
+                ReconciliationContext(
+                    reconciliationSetting = reconciliationSetting,
+                    jobId = UUID.randomUUID().toString(),
+                    tenantId = "local",
+                    bucketValue = "Entity1"
+                )
+            reconciliationService.reconcile(rc)
+        }
     }
 }

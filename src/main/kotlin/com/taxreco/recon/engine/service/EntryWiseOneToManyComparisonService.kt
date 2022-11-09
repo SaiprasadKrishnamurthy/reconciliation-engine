@@ -31,7 +31,7 @@ class EntryWiseOneToManyComparisonService : RulesetEvaluationService {
                 val simpleContext = standardEvaluationContext(datasources[0],
                     recordsA.map {
                         if (!it.attrs.containsKey(MATCH_KEY_ATTRIBUTE)) {
-                            it.attrs[MATCH_KEY_ATTRIBUTE] = "\$${UUID.randomUUID()}}"
+                            it.attrs[MATCH_KEY_ATTRIBUTE] = "\$${UUID.randomUUID()}"
                             it.attrs
                         } else {
                             it.attrs
@@ -40,7 +40,7 @@ class EntryWiseOneToManyComparisonService : RulesetEvaluationService {
                     datasources[1],
                     recordsB.map {
                         if (!it.attrs.containsKey(MATCH_KEY_ATTRIBUTE)) {
-                            it.attrs[MATCH_KEY_ATTRIBUTE] = "\$${UUID.randomUUID()}}"
+                            it.attrs[MATCH_KEY_ATTRIBUTE] = "\$${UUID.randomUUID()}"
                             it.attrs
                         } else {
                             it.attrs
