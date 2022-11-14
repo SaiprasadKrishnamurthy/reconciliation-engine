@@ -1,0 +1,96 @@
+{
+  "id": "1",
+  "name": "Transaction Matches",
+  "group": "FY 21-22",
+  "dataSources": [
+    {
+      "id": "sales",
+      "predicate": "name='sales' order by id",
+      "bucketField": "entityId"
+    },
+    {
+      "id": "tdsLedger",
+      "predicate": "name='tdsLedger' order by id",
+      "bucketField": "entityId"
+    },
+    {
+      "id": "_26as",
+      "predicate": "name='_26as' order by id",
+      "bucketField": "entityId"
+    }
+  ],
+  "rulesets": [
+    {
+      "name": "Field Checks",
+      "type": "FieldChecks",
+      "rules": [
+        {
+          "id": "tds_value_checks_on_sales",
+          "expression": "#valueWithinTolerance(sales.tdsOnSales, 0.1 * sales.transactionAmount, 1.0)",
+          "tagsWhenMatched": [
+            "CORRECT_TDS_ON_SALES"
+          ],
+          "tagsWhenNotMatched": [
+            "INCORRECT_TDS_ON_SALES"
+          ]
+        },
+        {
+          "id": "tds_value_checks_on_tds_ledger",
+          "expression": "tdsLedger.tds > 0",
+          "tagsWhenMatched": [
+            "CORRECT_TDS_ON_TDS_LEDGER"
+          ],
+          "tagsWhenNotMatched": [
+            "INCORRECT_TDS_ON_TDS_LEDGER"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Total Level Matches",
+      "type": "TotalsChecks",
+      "rules": [
+        {
+          "id": "tds_totals_at_transactions_level_between_sales_and_tds_ledger",
+          "expression": "#totalEqualsWithNumericTolerance('tds_totals_at_transactions_level_between_sales_and_tds_ledger', sales, tdsLedger, {'invoiceNo'}, {'invoiceNo'}, 'tdsOnSales', 'tds', 1.0)",
+          "tagsWhenMatched": [
+            "TRANSACTION_TOTALS_MATCHED_BETWEEN_SALES_AND_TDSLEDGER"
+          ],
+          "tagsWhenNotMatched": [
+            "TRANSACTION_TOTALS_UNMATCHED_BETWEEN_SALES_AND_TDSLEDGER"
+          ]
+        },
+        {
+          "id": "tds_totals_at_transactions_level_between_tds_ledger_and_26as",
+          "expression": "#totalEqualsWithNumericTolerance('tds_totals_at_transactions_level_between_tds_ledger_and_26as', tdsLedger, _26as, {'invoiceNo'}, {'invoiceNo'}, 'tds', 'taxFiled', 1.0)",
+          "tagsWhenMatched": [
+            "TRANSACTION_TOTALS_MATCHED_BETWEEN_TDSLEDGER_AND_26AS"
+          ],
+          "tagsWhenNotMatched": [
+            "TRANSACTION_TOTALS_UNMATCHED_BETWEEN_TDSLEDGER_AND_26AS"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Transaction Level Matches",
+      "type": "EntryWiseOneToManyChecks",
+      "terminateWhenTagsPresent": [
+        "TRANSACTION_TOTALS_MATCHED_BETWEEN_SALES_AND_TDSLEDGER"
+      ],
+      "rules": [
+        {
+          "id": "tds_at_transactions_level_between_sales_and_tds_ledger",
+          "expression1": "#valueWithinTolerance(sales.tdsOnSales, tdsLedger.tds, 1.0) && sales.invoiceNo == tdsLedger.invoiceNo",
+          "expression": "#multimatch('tds_at_transactions_level_between_sales_and_tds_ledger', sales, tdsLedger, {'invoiceNo'}, {'invoiceNo'}, 'tdsOnSales', 'tds', 1.0)",
+          "tagsWhenMatched": [
+            "TRANSACTIONS_MATCHED_BETWEEN_SALES_AND_TDSLEDGER"
+          ],
+          "tagsWhenNotMatched": [
+            "TRANSACTIONS_UNMATCHED_BETWEEN_SALES_AND_TDSLEDGER"
+          ]
+        }
+      ]
+    }
+  ]
+}

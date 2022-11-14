@@ -92,9 +92,7 @@ class Bootstrap {
 
     private fun foo(reconciliationService: ReconciliationService, matchRecordRepository: MatchRecordRepository) {
         val files = arrayOf(
-            "ReconSettingFieldChecks.json",
-            "ReconSettingTotalsChecks.json",
-            "ReconSettingTransactionChecks.json"
+            "ReconSettings.json",
         )
         files.forEach { f ->
             val reconciliationSetting =
@@ -102,14 +100,17 @@ class Bootstrap {
                     FileInputStream(f),
                     ReconciliationSetting::class.java
                 )
-            val rc =
-                ReconciliationContext(
-                    reconciliationSetting = reconciliationSetting,
-                    jobId = UUID.randomUUID().toString(),
-                    tenantId = "local",
-                    bucketValue = "Entity1"
-                )
-            reconciliationService.reconcile(rc)
+            reconciliationSetting.rulesets.forEach { rs ->
+                val rc =
+                    ReconciliationContext(
+                        reconciliationSetting = reconciliationSetting,
+                        jobId = UUID.randomUUID().toString(),
+                        tenantId = "local",
+                        bucketValue = "Entity1",
+                        ruleset = rs
+                    )
+                reconciliationService.reconcile(rc)
+            }
         }
     }
 }

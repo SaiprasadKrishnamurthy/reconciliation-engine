@@ -57,7 +57,7 @@ class TotalsWiseComparisonService : RulesetEvaluationService {
     }
 
     override fun supportedRulesetType(): RulesetType {
-        return RulesetType.TotalsComparison
+        return RulesetType.TotalsChecks
     }
 
     private fun standardEvaluationContext(

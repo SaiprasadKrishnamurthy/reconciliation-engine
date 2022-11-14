@@ -31,9 +31,9 @@ class ReconciliationService(
         }
 
         val servs = applicationContext.getBeansOfType(RulesetEvaluationService::class.java).values
-        servs.filter { it.supportedRulesetType() == reconciliationContext.reconciliationSetting.ruleset.type }
+        servs.filter { it.supportedRulesetType() == reconciliationContext.ruleset.type }
             .forEach {
-                it.match(reconciliationContext, reconciliationContext.reconciliationSetting.ruleset)
+                it.match(reconciliationContext, reconciliationContext.ruleset)
             }
 
         println("\n\n-----------\n\n")
@@ -52,7 +52,7 @@ class ReconciliationService(
                             record = tr.attrs,
                             tags = tr.matchTags,
                             datasource = tr.name,
-                            rulesetType = reconciliationContext.reconciliationSetting.ruleset.type
+                            rulesetType = reconciliationContext.ruleset.type
                         )
                     )
                 }

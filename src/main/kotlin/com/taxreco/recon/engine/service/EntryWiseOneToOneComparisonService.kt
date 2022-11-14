@@ -65,7 +65,7 @@ class EntryWiseOneToOneComparisonService : RulesetEvaluationService {
     }
 
     override fun supportedRulesetType(): RulesetType {
-        return RulesetType.EntryWiseOneToOneComparison
+        return RulesetType.EntryWiseOneToOneChecks
     }
 
     private fun standardEvaluationContext(
