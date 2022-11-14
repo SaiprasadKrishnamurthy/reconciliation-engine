@@ -1,17 +1,16 @@
+---
 id: '1'
 name: Transaction Matches
+group: FY 21-22
 dataSources:
   - id: sales
-    predicate: date(transactionDate,'YYYY-MM-DD') >= '2021-04-01' and date(transactionDate,'YYYY-MM-DD')
-      < '2022-04-01' order by transactionDate
+    predicate: name='sales' order by id
     bucketField: entityId
   - id: tdsLedger
-    predicate: date(transactionDate,'YYYY-MM-DD') >= '2021-04-01' and date(transactionDate,'YYYY-MM-DD')
-      < '2022-04-01' order by transactionDate
+    predicate: name='tdsLedger' order by id
     bucketField: entityId
-  - id: 26as
-    predicate: date(transactionDate,'YYYY-MM-DD') >= '2021-04-01' and date(transactionDate,'YYYY-MM-DD')
-      < '2022-04-01' order by transactionDate
+  - id: _26as
+    predicate: name='_26as' order by id
     bucketField: entityId
 rulesets:
   - name: Field Checks
@@ -24,8 +23,14 @@ rulesets:
           - CORRECT_TDS_ON_SALES
         tagsWhenNotMatched:
           - INCORRECT_TDS_ON_SALES
+      - id: tds_value_checks_on_tds_ledger
+        expression: tdsLedger.tds > 0
+        tagsWhenMatched:
+          - CORRECT_TDS_ON_TDS_LEDGER
+        tagsWhenNotMatched:
+          - INCORRECT_TDS_ON_TDS_LEDGER
   - name: Total Level Matches
-    type: TotalsComparison
+    type: TotalsChecks
     rules:
       - id: tds_totals_at_transactions_level_between_sales_and_tds_ledger
         expression: "#totalEqualsWithNumericTolerance('tds_totals_at_transactions_level_between_sales_and_tds_ledger',
@@ -34,13 +39,22 @@ rulesets:
           - TRANSACTION_TOTALS_MATCHED_BETWEEN_SALES_AND_TDSLEDGER
         tagsWhenNotMatched:
           - TRANSACTION_TOTALS_UNMATCHED_BETWEEN_SALES_AND_TDSLEDGER
+      - id: tds_totals_at_transactions_level_between_tds_ledger_and_26as
+        expression: "#totalEqualsWithNumericTolerance('tds_totals_at_transactions_level_between_tds_ledger_and_26as',
+      tdsLedger, _26as, {'invoiceNo'}, {'invoiceNo'}, 'tds', 'taxFiled', 1.0)"
+        tagsWhenMatched:
+          - TRANSACTION_TOTALS_MATCHED_BETWEEN_TDSLEDGER_AND_26AS
+        tagsWhenNotMatched:
+          - TRANSACTION_TOTALS_UNMATCHED_BETWEEN_TDSLEDGER_AND_26AS
   - name: Transaction Level Matches
-    type: EntryWiseOneToOneComparison
+    type: EntryWiseOneToManyChecks
+    terminateWhenTagsPresent:
+      - TRANSACTION_TOTALS_MATCHED_BETWEEN_SALES_AND_TDSLEDGER
     rules:
       - id: tds_at_transactions_level_between_sales_and_tds_ledger
-        expression: "#valueWithinTolerance(sales.tdsOnSales, tdsLedger.tds, 1.0) && sales.invoiceNo
+        expression1: "#valueWithinTolerance(sales.tdsOnSales, tdsLedger.tds, 1.0) && sales.invoiceNo
       == tdsLedger.invoiceNo"
-        expression1: "#multimatch('tds_at_transactions_level_between_sales_and_tds_ledger',
+        expression: "#multimatch('tds_at_transactions_level_between_sales_and_tds_ledger',
       sales, tdsLedger, {'invoiceNo'}, {'invoiceNo'}, 'tdsOnSales', 'tds', 1.0)"
         tagsWhenMatched:
           - TRANSACTIONS_MATCHED_BETWEEN_SALES_AND_TDSLEDGER
