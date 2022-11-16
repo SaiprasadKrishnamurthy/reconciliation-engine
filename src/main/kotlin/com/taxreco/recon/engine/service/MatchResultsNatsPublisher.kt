@@ -6,16 +6,18 @@ import com.taxreco.recon.engine.model.MatchResultPublisher
 import com.taxreco.recon.engine.model.ReconciliationContext
 import io.nats.client.Connection
 import io.nats.client.api.StreamConfiguration
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.nio.charset.Charset
 
 @Service
-class NatsPublisher(private val connection: Connection) : MatchResultPublisher {
+class MatchResultsNatsPublisher(private val connection: Connection, @Value("\${prefix}") private val prefix: String) :
+    MatchResultPublisher {
 
     private val jacksonObjectMapper = jacksonObjectMapper()
 
     override fun publish(reconciliationContext: ReconciliationContext, matchResult: MatchResult) {
-        val topic = reconciliationContext.tenantId + ".reconresult." + reconciliationContext.jobId
+        val topic = reconciliationContext.tenantId + ".reconresult.$prefix"
         val json = jacksonObjectMapper.writeValueAsString(matchResult)
         connection.jetStream().publish(
             topic,
@@ -28,14 +30,14 @@ class NatsPublisher(private val connection: Connection) : MatchResultPublisher {
             connection.jetStreamManagement().addStream(
                 StreamConfiguration.Builder()
                     .name(reconciliationContext.tenantId + "-streams")
-                    .subjects(reconciliationContext.tenantId + ".reconresult." + reconciliationContext.jobId)
+                    .subjects(reconciliationContext.tenantId + ".reconresult.$prefix")
                     .build()
             )
         } catch (ex: Exception) {
             connection.jetStreamManagement().updateStream(
                 StreamConfiguration.Builder()
                     .name(reconciliationContext.tenantId + "-streams")
-                    .subjects(reconciliationContext.tenantId + ".reconresult." + reconciliationContext.jobId)
+                    .subjects(reconciliationContext.tenantId + ".reconresult.$prefix")
                     .build()
             )
         }

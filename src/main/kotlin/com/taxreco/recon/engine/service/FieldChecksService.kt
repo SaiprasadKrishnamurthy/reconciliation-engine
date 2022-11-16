@@ -35,6 +35,7 @@ class FieldChecksService : RulesetEvaluationService {
                             rec.matchTags.addAll(rule.tagsWhenMatched)
                             rec.attrs[Functions.MATCH_KEY_ATTRIBUTE] = UUID.randomUUID().toString()
                         } else {
+                            rec.attrs[Functions.MATCH_KEY_ATTRIBUTE] = "$"+UUID.randomUUID().toString()
                             rec.matchTags.addAll(rule.tagsWhenNotMatched)
                         }
                     } catch (ex: Exception) {

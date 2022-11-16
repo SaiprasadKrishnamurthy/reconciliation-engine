@@ -6,7 +6,8 @@ data class ReconciliationContext(
     val startedAt: Long = System.currentTimeMillis(),
     val bucketValue: String,
     val reconciliationSetting: ReconciliationSetting,
-    val ruleset: MatchRuleSet
+    val ruleset: MatchRuleSet,
+    val streamResults: Boolean = true
 ) {
     val transactionRecords: MutableMap<String, List<TransactionRecord>> = mutableMapOf()
 
