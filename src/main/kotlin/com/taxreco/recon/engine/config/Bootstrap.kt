@@ -1,10 +1,7 @@
 package com.taxreco.recon.engine.config
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.taxreco.recon.engine.model.ReconciliationSetting
-import com.taxreco.recon.engine.model.ReconciliationTriggeredEvent
-import com.taxreco.recon.engine.model.RecordId
-import com.taxreco.recon.engine.model.TransactionRecord
+import com.taxreco.recon.engine.model.*
 import com.taxreco.recon.engine.repository.MatchRecordRepository
 import com.taxreco.recon.engine.service.MatchResultsNatsPublisher
 import com.taxreco.recon.engine.service.ReconciliationService
@@ -15,7 +12,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.mongodb.core.MongoTemplate
 import java.io.FileInputStream
-import java.util.*
 
 @Configuration
 class Bootstrap {
@@ -34,18 +30,17 @@ class Bootstrap {
         mongoSample(mongoTemplate)
 
         repeat((0 until 1).count()) {
-            val jobId = UUID.randomUUID().toString()
-            connection.jetStream().publish(
-                reconTriggerSubject,
-                jacksonObjectMapper().writeValueAsBytes(
+            println(reconTriggerSubject)
+            println(
+                jacksonObjectMapper().writeValueAsString(
                     ReconciliationTriggeredEvent(
                         tenantId = "local",
                         reconSettingName = "Settings 1",
                         reconSettingVersion = 1,
                         streamResults = true,
-                        jobId = jobId,
+                        jobId = "1",
 
-                    )
+                        )
                 )
             )
         }
@@ -54,6 +49,7 @@ class Bootstrap {
     private fun mongoSample(mongoTemplate: MongoTemplate) {
         mongoTemplate.dropCollection(TransactionRecord::class.java)
         mongoTemplate.dropCollection(ReconciliationSetting::class.java)
+        mongoTemplate.dropCollection(MatchRecord::class.java)
         val sales = listOf(
             TransactionRecord(
                 id = RecordId("1", "sales"),

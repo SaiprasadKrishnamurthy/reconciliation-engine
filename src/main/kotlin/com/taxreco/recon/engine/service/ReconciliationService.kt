@@ -98,7 +98,6 @@ class ReconciliationService(
             val servs = applicationContext.getBeansOfType(RulesetEvaluationService::class.java).values
             servs.filter { it.supportedRulesetType() == reconciliationContext.ruleset.type }
                 .forEach {
-                    println("\t\t ${reconciliationContext.ruleset}")
                     it.match(reconciliationContext, reconciliationContext.ruleset)
                 }
 

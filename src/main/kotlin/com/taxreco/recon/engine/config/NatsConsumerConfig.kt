@@ -4,14 +4,14 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.taxreco.recon.engine.model.ReconciliationTriggeredEvent
 import com.taxreco.recon.engine.model.ReconciliationTriggeredForBucketEvent
 import com.taxreco.recon.engine.service.ReconciliationService
-import io.nats.client.*
+import io.nats.client.Connection
+import io.nats.client.Message
+import io.nats.client.PushSubscribeOptions
 import io.nats.client.api.StreamConfiguration
 import jakarta.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Configuration
-import org.springframework.scheduling.annotation.Scheduled
-import java.time.Duration
 
 
 @Configuration
@@ -52,51 +52,40 @@ class NatsConsumerConfig(
             )
             logger.info(" Finished updating NATS Consumer for subject $reconTriggerSubject ")
         }
+
+        reconTriggerEventSubscriber()
+        reconTriggerBucketEventSubscriber()
     }
 
-    @Scheduled(initialDelay = 5000, fixedDelayString = "\${recon.trigger.listener.poll.frequency.millis}")
-    fun startReconTriggerConsumer() {
-        val pullOptions = PullSubscribeOptions.builder()
-            .durable(reconTriggerSubjectDurable)
-            .build()
-
-        val sub: JetStreamSubscription = connection
-            .jetStream()
-            .subscribe(reconTriggerSubject, pullOptions)
-        val message: List<Message> = sub.fetch(100, Duration.ofSeconds(1))
-        message.forEach { msg ->
-            try {
-                reconciliationService.reconcile(
-                    jacksonObjectMapper.readValue(
-                        msg.data,
-                        ReconciliationTriggeredEvent::class.java
-                    )
+    private fun reconTriggerEventSubscriber() {
+        val messageHandler: (Message) -> Unit = { msg ->
+            reconciliationService.reconcile(
+                jacksonObjectMapper.readValue(
+                    msg.data,
+                    ReconciliationTriggeredEvent::class.java
                 )
-            } finally {
-                msg.ack()
-            }
+            )
         }
+        val push = PushSubscribeOptions.Builder().durable(reconTriggerSubjectDurable)
+            .deliverGroup(reconTriggerSubject)
+            .build()
+        val dispatcher = connection.createDispatcher()
+        connection.jetStream().subscribe(reconTriggerSubject, dispatcher, messageHandler, true, push)
     }
 
-    @Scheduled(initialDelay = 5000, fixedDelayString = "\${recon.bucket.trigger.listener.poll.frequency.millis}")
-    fun startReconBucketTriggerConsumer() {
-        val pullOptions = PullSubscribeOptions.builder()
-            .durable(reconBucketTriggerSubjectDurable)
-            .build()
-
-        val sub: JetStreamSubscription = connection.jetStream().subscribe(reconBucketTriggerSubject, pullOptions)
-        val message: List<Message> = sub.fetch(100, Duration.ofSeconds(1))
-        message.forEach { msg ->
-            try {
-                reconciliationService.reconcile(
-                    jacksonObjectMapper.readValue(
-                        msg.data,
-                        ReconciliationTriggeredForBucketEvent::class.java
-                    )
+    private fun reconTriggerBucketEventSubscriber() {
+        val messageHandler: (Message) -> Unit = { msg ->
+            reconciliationService.reconcile(
+                jacksonObjectMapper.readValue(
+                    msg.data,
+                    ReconciliationTriggeredForBucketEvent::class.java
                 )
-            } finally {
-                msg.ack()
-            }
+            )
         }
+        val push = PushSubscribeOptions.Builder().durable(reconBucketTriggerSubjectDurable)
+            .deliverGroup(reconBucketTriggerSubject)
+            .build()
+        val dispatcher = connection.createDispatcher()
+        connection.jetStream().subscribe(reconBucketTriggerSubject, dispatcher, messageHandler, true, push)
     }
 }
