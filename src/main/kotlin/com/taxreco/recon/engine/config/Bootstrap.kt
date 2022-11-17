@@ -26,7 +26,6 @@ class Bootstrap {
         matchRecordRepository: MatchRecordRepository,
         matchResultsNatsPublisher: MatchResultsNatsPublisher
     ) = CommandLineRunner {
-        tenantContext.tenantId = "local"
         mongoSample(mongoTemplate)
 
         repeat((0 until 1).count()) {
@@ -34,7 +33,7 @@ class Bootstrap {
             println(
                 jacksonObjectMapper().writeValueAsString(
                     ReconciliationTriggeredEvent(
-                        tenantId = "local",
+                        tenantId = "taxreco",
                         reconSettingName = "Settings 1",
                         reconSettingVersion = 1,
                         streamResults = true,
@@ -124,7 +123,7 @@ class Bootstrap {
         t6as.forEach { mongoTemplate.save(it) }
 
         val files = arrayOf(
-            "ReconSettings.json",
+            "illustrations/ReconSettings.json",
         )
         files.forEach { f ->
             val reconciliationSetting =
@@ -135,28 +134,4 @@ class Bootstrap {
             mongoTemplate.save(reconciliationSetting)
         }
     }
-
-    /*private fun foo(reconciliationService: ReconciliationService, matchRecordRepository: MatchRecordRepository) {
-        val files = arrayOf(
-            "ReconSettings.json",
-        )
-        files.forEach { f ->
-            val reconciliationSetting =
-                jacksonObjectMapper().readValue(
-                    FileInputStream(f),
-                    ReconciliationSetting::class.java
-                )
-            reconciliationSetting.rulesets.forEach { rs ->
-                val rc =
-                    ReconciliationContext(
-                        reconciliationSetting = reconciliationSetting,
-                        jobId = UUID.randomUUID().toString(),
-                        tenantId = "local",
-                        bucketValue = "Entity1",
-                        ruleset = rs
-                    )
-                reconciliationService.reconcile(rc)
-            }
-        }
-    }*/
 }

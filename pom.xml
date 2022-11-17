@@ -16,6 +16,8 @@
     <properties>
         <java.version>17</java.version>
         <kotlin.version>1.7.20</kotlin.version>
+        <docker.image.namespace>docker.io</docker.image.namespace>
+        <docker.image.prefix>saiprasadkrishnamurthy</docker.image.prefix>
     </properties>
     <dependencies>
         <dependency>
@@ -130,6 +132,23 @@
                         <version>${kotlin.version}</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>com.github.saiprasadkrishnamurthy</groupId>
+                <artifactId>springboot-manifest-maven-plugin</artifactId>
+                <version>2.14</version>
+                <executions>
+                    <execution>
+                        <id>generate-k8s-manifests</id>
+                        <goals>
+                            <goal>generate-k8s-manifests</goal>
+                        </goals>
+                        <configuration>
+                            <dockerImageNamespace>${docker.image.namespace}</dockerImageNamespace>
+                            <deploymentYmlTemplateFilesDir>deployment</deploymentYmlTemplateFilesDir>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

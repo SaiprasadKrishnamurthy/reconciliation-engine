@@ -1,11 +1,12 @@
 package com.taxreco.recon.engine.config
 
-import com.mongodb.MongoCredential
+import com.mongodb.ConnectionString
 import com.mongodb.client.MongoClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.springframework.context.annotation.Profile
 import org.springframework.data.mongodb.MongoDatabaseFactory
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration
 import org.springframework.data.mongodb.core.MongoClientFactoryBean
@@ -21,25 +22,13 @@ class MongoMultiTenantConfig(private val tenantContext: TenantContext) : Abstrac
     @Value("\${default.tenant}")
     private lateinit var defaultTenantDB: String
 
+    @Profile("!local")
     @Bean
     fun mongo(
-        @Value("\${mongodb.host}") mongoHost: String,
-        @Value("\${mongodb.port}") mongoPort: Int,
-        @Value("\${mongodb.username}") mongoUser: String,
-        @Value("\${mongodb.password}") mongoPassword: String
+        @Value("\${mongodb.uri}") mongoUri: String
     ): MongoClientFactoryBean {
         val mongo = MongoClientFactoryBean()
-        mongo.setHost("localhost")
-        mongo.setPort(mongoPort)
-        mongo.setCredential(
-            arrayOf(
-                MongoCredential.createCredential(
-                    mongoUser,
-                    "admin",
-                    mongoPassword.toCharArray()
-                )
-            )
-        )
+        mongo.setConnectionString(ConnectionString(mongoUri))
         return mongo
     }
 
