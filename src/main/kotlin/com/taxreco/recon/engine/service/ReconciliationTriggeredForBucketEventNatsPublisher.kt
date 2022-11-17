@@ -43,7 +43,6 @@ class ReconciliationTriggeredForBucketEventNatsPublisher(
                     .build()
             )
         } catch (ex: Exception) {
-            logger.error("Error while setting up the stream: ", ex)
             connection.jetStreamManagement().updateStream(
                 StreamConfiguration.Builder()
                     .name(reconStreamName)

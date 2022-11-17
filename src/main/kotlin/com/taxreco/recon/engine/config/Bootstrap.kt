@@ -3,7 +3,7 @@ package com.taxreco.recon.engine.config
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.taxreco.recon.engine.model.*
 import com.taxreco.recon.engine.repository.MatchRecordRepository
-import com.taxreco.recon.engine.service.MatchResultsNatsPublisher
+import com.taxreco.recon.engine.service.NatsPublisher
 import com.taxreco.recon.engine.service.ReconciliationService
 import io.nats.client.Connection
 import org.springframework.beans.factory.annotation.Value
@@ -11,7 +11,6 @@ import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.mongodb.core.MongoTemplate
-import java.io.FileInputStream
 
 @Configuration
 class Bootstrap {
@@ -24,7 +23,7 @@ class Bootstrap {
         tenantContext: TenantContext,
         reconciliationService: ReconciliationService,
         matchRecordRepository: MatchRecordRepository,
-        matchResultsNatsPublisher: MatchResultsNatsPublisher
+        natsPublisher: NatsPublisher
     ) = CommandLineRunner {
         mongoSample(mongoTemplate)
 

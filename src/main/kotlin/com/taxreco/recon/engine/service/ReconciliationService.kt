@@ -2,24 +2,23 @@ package com.taxreco.recon.engine.service
 
 import com.taxreco.recon.engine.config.TenantContext
 import com.taxreco.recon.engine.model.*
-import com.taxreco.recon.engine.repository.MatchRecordRepository
-import com.taxreco.recon.engine.repository.ReconciliationSettingRepository
-import com.taxreco.recon.engine.repository.TransactionRecordRepository
+import com.taxreco.recon.engine.repository.*
 import com.taxreco.recon.engine.service.Functions.MATCH_KEY_ATTRIBUTE
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
-import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.util.*
+import java.util.concurrent.atomic.AtomicLong
 
 @Service
 class ReconciliationService(
     private val applicationContext: ApplicationContext,
     private val transactionRecordRepository: TransactionRecordRepository,
-    private val mongoTemplate: MongoTemplate,
-    private val matchResultPublisher: MatchResultPublisher,
+    private val publisher: Publisher,
     private val matchRecordRepository: MatchRecordRepository,
+    private val jobStatsRepository: JobStatsRepository,
+    private val jobProgressStateRepository: JobProgressStateRepository,
     private val reconciliationSettingRepository: ReconciliationSettingRepository,
     private val tenantContext: TenantContext,
     private val reconciliationTriggeredForBucketEventPublisher: ReconciliationTriggeredForBucketEventPublisher
@@ -33,6 +32,10 @@ class ReconciliationService(
     @Async("reconThreadPoolExecutor")
     fun reconcile(reconciliationTriggeredEvent: ReconciliationTriggeredEvent) {
         try {
+            val expectedBucketValuesCount = AtomicLong(0L)
+            matchRecordRepository.deleteByJobId(reconciliationTriggeredEvent.jobId)
+            jobProgressStateRepository.deleteByJobId(reconciliationTriggeredEvent.jobId)
+            jobStatsRepository.deleteByJobId(reconciliationTriggeredEvent.jobId)
             tenantContext.tenantId = reconciliationTriggeredEvent.tenantId
             val setting = reconciliationSettingRepository.findByNameAndVersion(
                 reconciliationTriggeredEvent.reconSettingName,
@@ -61,8 +64,15 @@ class ReconciliationService(
                     if (index == 0) {
                         reconciliationTriggeredForBucketEventPublisher.init(reconciliationTriggeredForBucketEvent)
                     }
+                    expectedBucketValuesCount.getAndIncrement()
                     reconciliationTriggeredForBucketEventPublisher.publish(reconciliationTriggeredForBucketEvent)
                 }
+            jobStatsRepository.save(
+                JobStats(
+                    jobId = reconciliationTriggeredEvent.jobId,
+                    expectedBucketValuesCount = expectedBucketValuesCount.toLong()
+                )
+            )
         } finally {
             tenantContext.clear()
         }
@@ -71,7 +81,7 @@ class ReconciliationService(
     @Async("reconThreadPoolExecutor")
     fun reconcile(reconciliationTriggeredEvent: ReconciliationTriggeredForBucketEvent) {
         try {
-            logger.info(" Received: $reconciliationTriggeredEvent")
+//            logger.info(" Received: $reconciliationTriggeredEvent")
             tenantContext.tenantId = reconciliationTriggeredEvent.tenantId
             val reconciliationSetting = reconciliationSettingRepository.findByNameAndVersion(
                 reconciliationTriggeredEvent.reconSettingName,
@@ -104,7 +114,7 @@ class ReconciliationService(
             reconciliationContext.transactionRecords
                 .forEach { kv ->
                     kv.value.filter { it.matchTags.isNotEmpty() }.forEach { tr ->
-                        mongoTemplate.save(
+                        matchRecordRepository.save(
                             MatchRecord(
                                 id = UUID.randomUUID().toString(),
                                 originalRecordId = tr.id!!.idField,
@@ -123,21 +133,44 @@ class ReconciliationService(
                 }
 
             if (reconciliationContext.streamResults) {
-                matchResultPublisher.init(reconciliationContext)
+                publisher.init(reconciliationContext)
                 val bvs = matchRecordRepository.getDistinctBucketValues(reconciliationContext.jobId)
                 bvs.forEach { b ->
                     val mks = matchRecordRepository.getDistinctMatchKeys(reconciliationContext.jobId, b)
                     mks.forEach { mk ->
                         val matchResult = matchRecordRepository.getMatchResults(reconciliationContext.jobId, b, mk)
-                        matchResultPublisher.publish(
+                        publisher.publish(
                             reconciliationContext,
                             matchResult
                         )
-                        logger.info(" Results Streamed $matchResult")
+                        //logger.info(" Results Streamed $matchResult")
                     }
                 }
             }
+            jobProgressStateRepository.save(
+                JobProgressState(
+                    jobId = reconciliationTriggeredEvent.jobId,
+                    id = "${reconciliationTriggeredEvent.jobId}_${reconciliationTriggeredEvent.ruleSetName}_${reconciliationTriggeredEvent.bucketValue}"
+                )
+            )
         } finally {
+            val count = jobProgressStateRepository.countByJobId(reconciliationTriggeredEvent.jobId)
+            val updateCount = jobStatsRepository.updateCount(reconciliationTriggeredEvent.jobId, count)
+            updateCount?.let {
+                val reconciliationJobProgressEvent = ReconciliationJobProgressEvent(
+                    jobId = reconciliationTriggeredEvent.jobId,
+                    tenantId = reconciliationTriggeredEvent.tenantId,
+                    expectedCount = updateCount.expectedBucketValuesCount,
+                    processedCount = count,
+                    startedAt = it.startedAt,
+                    endedAt = if (count >= it.expectedBucketValuesCount) System.currentTimeMillis() else null,
+                    finished = count >= it.expectedBucketValuesCount
+                )
+                if(reconciliationJobProgressEvent.finished) {
+                    logger.info(" ******************************** ${reconciliationTriggeredEvent.jobId} Finished for Tenant ${reconciliationTriggeredEvent.tenantId}  ******************************* ")
+                }
+                publisher.publish(reconciliationJobProgressEvent)
+            }
             tenantContext.clear()
         }
     }

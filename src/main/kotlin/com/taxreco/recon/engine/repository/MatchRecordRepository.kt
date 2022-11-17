@@ -13,6 +13,16 @@ import org.springframework.stereotype.Repository
 @Repository
 class MatchRecordRepository(private val mongoTemplate: MongoTemplate) {
 
+    fun deleteByJobId(jobId: String) {
+        val query = Query()
+        query.addCriteria(Criteria.where("jobId").isEqualTo(jobId))
+        mongoTemplate.remove(query, MatchRecord::class.java)
+    }
+
+    fun save(matchRecord: MatchRecord) {
+        mongoTemplate.save(matchRecord)
+    }
+
     fun getDistinctBucketValues(jobId: String): List<String> {
         val query = Query()
         query.addCriteria(Criteria.where("jobId").isEqualTo(jobId))
