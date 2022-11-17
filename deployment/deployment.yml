@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: "reconciliation-engine"
+  labels:
+    app: "reconciliation-engine"
+spec:
+  type: NodePort
+  ports:
+    - port: 18080
+      targetPort: 18080
+  selector:
+    name: "reconciliation-engine"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "reconciliation-engine-deployment"
+  labels:
+    domain: "search"
+    tier: "backend"
+    category: "business-services"
+spec:
+  selector:
+    matchLabels:
+      name: "reconciliation-engine"
+  replicas: 1
+  template:
+    metadata:
+      name: "reconciliation-engine"
+      labels:
+        name: "reconciliation-engine"
+        domain: "search"
+        tier: "backend"
+        category: "business-services"
+    spec:
+      containers:
+        - name: reconciliation-engine-pod
+          image: docker.io/saiprasadkrishnamurthy/reconciliation-engine
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 18080
+
+

@@ -87,13 +87,30 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <layers>
+                        <enabled>true</enabled>
+                    </layers>
                     <image>
-                        <buildpacks>
-                            <buildpack>gcr.io/paketo-buildpacks/bellsoft-liberica:9.9.0-ea</buildpack>
-                            <buildpack>gcr.io/paketo-buildpacks/java-native-image</buildpack>
-                        </buildpacks>
+                        <name>saiprasadkrishnamurthy/${project.artifactId}</name>
                     </image>
+                    <docker>
+                        <publishRegistry>
+                            <username>saiprasadkrishnamurthy</username>
+                            <password>${docker.registry.password}</password>
+                        </publishRegistry>
+                    </docker>
                 </configuration>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <id>build-docker-image</id>
+                        <goals>
+                            <goal>
+                                build-image
+                            </goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
