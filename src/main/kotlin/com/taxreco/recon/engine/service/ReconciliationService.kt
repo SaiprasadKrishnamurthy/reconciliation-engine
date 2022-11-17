@@ -168,6 +168,7 @@ class ReconciliationService(
                 )
                 if(reconciliationJobProgressEvent.finished) {
                     logger.info(" ******************************** ${reconciliationTriggeredEvent.jobId} Finished for Tenant ${reconciliationTriggeredEvent.tenantId}  ******************************* ")
+                    jobProgressStateRepository.deleteByJobId(reconciliationTriggeredEvent.jobId)
                 }
                 publisher.publish(reconciliationJobProgressEvent)
             }
