@@ -1,44 +1,38 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: "reconciliation-engine"
+  name: ${serviceName}
   labels:
-    app: "reconciliation-engine"
+    app: ${serviceName}
 spec:
-  type: NodePort
   ports:
-    - port: 18080
-      targetPort: 18080
+    - port: ${server.port}
+      protocol: TCP
+      targetPort: ${server.port}
   selector:
-    name: "reconciliation-engine"
+    app: ${serviceName}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "reconciliation-engine-deployment"
-  labels:
-    domain: "search"
-    tier: "backend"
-    category: "business-services"
+  name: ${serviceName}
 spec:
   selector:
     matchLabels:
-      name: "reconciliation-engine"
+      app: ${serviceName}
   replicas: 1
   template:
     metadata:
-      name: "reconciliation-engine"
       labels:
-        name: "reconciliation-engine"
-        domain: "search"
-        tier: "backend"
-        category: "business-services"
+        app: ${serviceName}
     spec:
       containers:
-        - name: reconciliation-engine-pod
-          image: docker.io/saiprasadkrishnamurthy/reconciliation-engine
+        - name: ${serviceName}
+          image: ${imageName}:${version}
           imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: ${configMapTemplateName}
           ports:
-            - containerPort: 18080
-
+            - containerPort: ${server.port}
 

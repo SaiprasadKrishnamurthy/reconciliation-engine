@@ -122,16 +122,11 @@ class Bootstrap {
         tdsLedger.forEach { mongoTemplate.save(it) }
         t6as.forEach { mongoTemplate.save(it) }
 
-        val files = arrayOf(
-            "illustrations/ReconSettings.json",
-        )
-        files.forEach { f ->
             val reconciliationSetting =
                 jacksonObjectMapper().readValue(
-                    FileInputStream(f),
+                    Bootstrap::class.java.classLoader.getResourceAsStream("ReconSettings.json"),
                     ReconciliationSetting::class.java
                 )
             mongoTemplate.save(reconciliationSetting)
-        }
     }
 }

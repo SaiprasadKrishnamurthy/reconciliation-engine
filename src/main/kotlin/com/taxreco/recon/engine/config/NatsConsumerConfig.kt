@@ -19,7 +19,7 @@ class NatsConsumerConfig(
     private val connection: Connection,
     @Value("\${reconTriggerSubject}") private val reconTriggerSubject: String,
     @Value("\${reconBucketTriggerSubject}") private val reconBucketTriggerSubject: String,
-    @Value("\${reconConsumerStreamName}") private val reconConsumerStreamName: String,
+    @Value("\${reconStreamName}") private val reconStreamName: String,
     @Value("\${reconTriggerSubjectDurable}") private val reconTriggerSubjectDurable: String,
     @Value("\${reconBucketTriggerSubjectDurable}") private val reconBucketTriggerSubjectDurable: String,
     private val reconciliationService: ReconciliationService
@@ -39,15 +39,15 @@ class NatsConsumerConfig(
             logger.info(" Setting up consumer streams ")
             connection.jetStreamManagement().addStream(
                 StreamConfiguration.Builder()
-                    .name(reconConsumerStreamName)
-                    .subjects(reconTriggerSubject, reconBucketTriggerSubject)
+                    .name(reconStreamName)
+                    .addSubjects(reconTriggerSubject, reconBucketTriggerSubject)
                     .build()
             )
         } catch (ex: Exception) {
             connection.jetStreamManagement().updateStream(
                 StreamConfiguration.Builder()
-                    .name(reconConsumerStreamName)
-                    .subjects(reconTriggerSubject, reconBucketTriggerSubject)
+                    .name(reconStreamName)
+                    .addSubjects(reconTriggerSubject, reconBucketTriggerSubject)
                     .build()
             )
             logger.info(" Finished updating NATS Consumer for subject $reconTriggerSubject ")

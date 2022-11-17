@@ -1,1 +1,5 @@
-nats h.reconciliation.trigger.main "{\"tenantId\":\"local\",\"jobId\":\"1\",\"startedAt\":1668603513371,\"reconSettingName\":\"Settings 1\",\"reconSettingVersion\":1,\"streamResults\":true}"
+nats --port 62333 dev2.reconciliation.trigger.main "{\"tenantId\":\"taxreco\",\"jobId\":\"1\",\"startedAt\":1668603513371,\"reconSettingName\":\"Settings 1\",\"reconSettingVersion\":1,\"streamResults\":true}"
+nats dev2.reconciliation.trigger.main "{\"tenantId\":\"taxreco\",\"jobId\":\"1\",\"startedAt\":1668603513371,\"reconSettingName\":\"Settings 1\",\"reconSettingVersion\":1,\"streamResults\":true}"
+
+
+minikube service nats

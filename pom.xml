@@ -93,7 +93,7 @@
                         <enabled>true</enabled>
                     </layers>
                     <image>
-                        <name>saiprasadkrishnamurthy/${project.artifactId}</name>
+                        <name>saiprasadkrishnamurthy/${project.artifactId}:${project.version}</name>
                     </image>
                     <docker>
                         <publishRegistry>
@@ -144,7 +144,8 @@
                             <goal>generate-k8s-manifests</goal>
                         </goals>
                         <configuration>
-                            <dockerImageNamespace>${docker.image.namespace}</dockerImageNamespace>
+                            <dockerImageNamespace>${docker.image.namespace}/${docker.image.prefix}
+                            </dockerImageNamespace>
                             <deploymentYmlTemplateFilesDir>deployment</deploymentYmlTemplateFilesDir>
                         </configuration>
                     </execution>

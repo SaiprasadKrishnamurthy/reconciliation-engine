@@ -128,10 +128,12 @@ class ReconciliationService(
                 bvs.forEach { b ->
                     val mks = matchRecordRepository.getDistinctMatchKeys(reconciliationContext.jobId, b)
                     mks.forEach { mk ->
+                        val matchResult = matchRecordRepository.getMatchResults(reconciliationContext.jobId, b, mk)
                         matchResultPublisher.publish(
                             reconciliationContext,
-                            matchRecordRepository.getMatchResults(reconciliationContext.jobId, b, mk)
+                            matchResult
                         )
+                        logger.info(" Results Streamed $matchResult")
                     }
                 }
             }
